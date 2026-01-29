@@ -26,6 +26,13 @@ public class EventController {
 
     // ==================== ENDPOINT PUBBLICI ====================
 
+    @GetMapping("/public")
+    public ResponseEntity<Page<EventResponse>> getPublicEvents(
+            @RequestParam(required = false) EventType type,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(eventService.getPublicAll(type, pageable));
+    }
+
     @GetMapping("/public/upcoming")
     public ResponseEntity<List<EventResponse>> getUpcomingEvents() {
         return ResponseEntity.ok(eventService.getUpcomingEvents());
@@ -37,9 +44,8 @@ public class EventController {
     }
 
     @GetMapping("/public/past")
-    public ResponseEntity<Page<EventResponse>> getPastEvents(
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(eventService.getPastEvents(pageable));
+    public ResponseEntity<List<EventResponse>> getPastEvents() {
+        return ResponseEntity.ok(eventService.getPastEventsList());
     }
 
     @GetMapping("/public/{id}")

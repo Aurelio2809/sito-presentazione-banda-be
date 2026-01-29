@@ -28,6 +28,10 @@ public interface EventService {
     List<EventResponse> getUpcomingAnnouncements();
 
     Page<EventResponse> getPastEvents(Pageable pageable);
+    
+    List<EventResponse> getPastEventsList();
+    
+    Page<EventResponse> getPublicAll(EventType type, Pageable pageable);
 
     EventResponse update(Long id, EventRequest request);
 

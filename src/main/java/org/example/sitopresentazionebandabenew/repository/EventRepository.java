@@ -27,6 +27,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query("SELECT e FROM Event e WHERE e.type = :type AND e.status = 'PUBLISHED' AND e.eventDate < :date ORDER BY e.eventDate DESC")
     Page<Event> findPastPublished(@Param("type") EventType type, @Param("date") LocalDate date, Pageable pageable);
+    
+    @Query("SELECT e FROM Event e WHERE e.type = :type AND e.status = 'PUBLISHED' AND e.eventDate < :date ORDER BY e.eventDate DESC")
+    List<Event> findPastPublishedList(@Param("type") EventType type, @Param("date") LocalDate date);
 
     @Query("SELECT e FROM Event e WHERE e.status = 'PUBLISHED' ORDER BY e.eventDate DESC")
     Page<Event> findAllPublished(Pageable pageable);

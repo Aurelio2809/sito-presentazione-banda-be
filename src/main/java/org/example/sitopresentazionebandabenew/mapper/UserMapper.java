@@ -11,6 +11,7 @@ import java.util.List;
 public interface UserMapper {
 
     @Mapping(target = "role", expression = "java(user.getRole().name())")
+    @Mapping(source = "createdAt", target = "createdAt")
     UserResponse toResponse(User user);
 
     List<UserResponse> toResponseList(List<User> users);

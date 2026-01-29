@@ -103,6 +103,25 @@ public class EventServiceImpl implements EventService {
         return eventRepository.findPastPublished(EventType.EVENT, LocalDate.now(), pageable)
                 .map(eventMapper::toResponse);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventResponse> getPastEventsList() {
+        return eventMapper.toResponseList(
+                eventRepository.findPastPublishedList(EventType.EVENT, LocalDate.now())
+        );
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EventResponse> getPublicAll(EventType type, Pageable pageable) {
+        if (type != null) {
+            return eventRepository.findByTypeAndStatus(type, EventStatus.PUBLISHED, pageable)
+                    .map(eventMapper::toResponse);
+        }
+        return eventRepository.findByStatus(EventStatus.PUBLISHED, pageable)
+                .map(eventMapper::toResponse);
+    }
 
     @Override
     public EventResponse update(Long id, EventRequest request) {
