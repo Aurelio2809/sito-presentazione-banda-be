@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class GalleryPhotoRequest {
 
-    @NotBlank(message = "URL immagine obbligatorio")
+    // src viene generato automaticamente durante l'upload
     private String src;
 
     @NotBlank(message = "Titolo obbligatorio")
