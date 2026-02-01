@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -44,13 +46,25 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
 
     @Override
     public GalleryPhotoResponse uploadPhoto(MultipartFile file, GalleryPhotoRequest metadata) {
-        // Salva il file
+        // Verifica limite 7 preferite prima di caricare come preferita
+        if (metadata.isFavorite()) {
+            long favoriteCount = photoRepository.countByFavoriteTrue();
+            if (favoriteCount >= 7) {
+                throw new org.example.sitopresentazionebandabenew.exception.BadRequestException(
+                    "Limite massimo di 7 foto preferite raggiunto"
+                );
+            }
+        }
+        
+        // Salva il file (genera anche la thumbnail)
         String filename = fileStorageService.storePhoto(file);
         String photoUrl = fileStorageService.getPhotoUrl(filename);
+        String thumbnailUrl = fileStorageService.getThumbnailUrl(filename);
 
         // Crea l'entity
         GalleryPhoto photo = photoMapper.toEntity(metadata);
         photo.setSrc(photoUrl);
+        photo.setThumbnailSrc(thumbnailUrl);
         photo.setCreatedBy(getCurrentUser());
 
         // Se è preferito, calcola l'ordine
@@ -126,6 +140,17 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     @Override
     public GalleryPhotoResponse toggleFavorite(Long id) {
         GalleryPhoto photo = findPhotoOrThrow(id);
+        
+        // Verifica limite 7 preferite prima di aggiungere
+        if (!photo.isFavorite()) {
+            long favoriteCount = photoRepository.countByFavoriteTrue();
+            if (favoriteCount >= 7) {
+                throw new org.example.sitopresentazionebandabenew.exception.BadRequestException(
+                    "Limite massimo di 7 foto preferite raggiunto"
+                );
+            }
+        }
+        
         photo.setFavorite(!photo.isFavorite());
 
         if (photo.isFavorite()) {
@@ -179,6 +204,48 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
                 id,
                 title
         );
+    }
+
+    @Override
+    public Map<String, Integer> generateMissingThumbnails() {
+        List<GalleryPhoto> photosWithoutThumbnail = photoRepository.findPhotosWithoutThumbnail();
+        
+        int processed = 0;
+        int success = 0;
+        int failed = 0;
+
+        for (GalleryPhoto photo : photosWithoutThumbnail) {
+            processed++;
+            
+            // Estrai il filename dal src
+            String src = photo.getSrc();
+            if (src == null || !src.contains("/")) {
+                failed++;
+                continue;
+            }
+            
+            String filename = src.substring(src.lastIndexOf("/") + 1);
+            
+            // Genera la thumbnail
+            boolean generated = fileStorageService.generateThumbnailForExistingFile(filename);
+            
+            if (generated) {
+                // Aggiorna il campo thumbnailSrc nel database
+                String thumbnailUrl = fileStorageService.getThumbnailUrl(filename);
+                photo.setThumbnailSrc(thumbnailUrl);
+                photoRepository.save(photo);
+                success++;
+            } else {
+                failed++;
+            }
+        }
+
+        Map<String, Integer> result = new HashMap<>();
+        result.put("processed", processed);
+        result.put("success", success);
+        result.put("failed", failed);
+        
+        return result;
     }
 
     private GalleryPhoto findPhotoOrThrow(Long id) {

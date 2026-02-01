@@ -15,6 +15,7 @@ public class GalleryPhotoResponse {
 
     private Long id;
     private String src;
+    private String thumbnailSrc;
     private String title;
     private String description;
     private String location;

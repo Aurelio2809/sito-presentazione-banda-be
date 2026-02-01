@@ -9,9 +9,20 @@ public interface FileStorageService {
 
     Resource loadPhotoAsResource(String filename);
 
+    Resource loadThumbnailAsResource(String filename);
+
     void deletePhoto(String filename);
 
     boolean photoExists(String filename);
 
     String getPhotoUrl(String filename);
+
+    String getThumbnailUrl(String filename);
+
+    /**
+     * Genera una thumbnail per un file esistente.
+     * @param filename il nome del file originale
+     * @return true se la thumbnail è stata generata con successo, false altrimenti
+     */
+    boolean generateThumbnailForExistingFile(String filename);
 }

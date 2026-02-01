@@ -21,6 +21,9 @@ public class GalleryPhoto {
     @Column(nullable = false)
     private String src;
 
+    @Column
+    private String thumbnailSrc;
+
     @Column(nullable = false, length = 200)
     private String title;
 

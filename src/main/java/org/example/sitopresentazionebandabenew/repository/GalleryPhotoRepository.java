@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long> {
 
+    long countByFavoriteTrue();
+
     List<GalleryPhoto> findByFavoriteTrue();
 
     List<GalleryPhoto> findByFavoriteTrueOrderByDisplayOrderAsc();
@@ -23,4 +25,7 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
 
     @Query("SELECT MAX(p.displayOrder) FROM GalleryPhoto p WHERE p.favorite = true")
     Integer findMaxDisplayOrder();
+
+    @Query("SELECT p FROM GalleryPhoto p WHERE p.thumbnailSrc IS NULL")
+    List<GalleryPhoto> findPhotosWithoutThumbnail();
 }

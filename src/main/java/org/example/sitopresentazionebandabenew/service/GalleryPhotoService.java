@@ -27,4 +27,10 @@ public interface GalleryPhotoService {
     GalleryPhotoResponse updateDisplayOrder(Long id, Integer order);
 
     void delete(Long id);
+
+    /**
+     * Genera le thumbnail per tutte le foto che non le hanno.
+     * @return mappa con risultati: "processed", "success", "failed"
+     */
+    java.util.Map<String, Integer> generateMissingThumbnails();
 }

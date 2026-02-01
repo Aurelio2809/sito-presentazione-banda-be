@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/gallery")
@@ -45,6 +46,18 @@ public class GalleryController {
     @GetMapping("/photos/{filename:.+}")
     public ResponseEntity<Resource> servePhoto(@PathVariable String filename) {
         Resource resource = fileStorageService.loadPhotoAsResource(filename);
+        
+        String contentType = determineContentType(filename);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000")
+                .body(resource);
+    }
+
+    @GetMapping("/photos/thumb/{filename:.+}")
+    public ResponseEntity<Resource> serveThumbnail(@PathVariable String filename) {
+        Resource resource = fileStorageService.loadThumbnailAsResource(filename);
         
         String contentType = determineContentType(filename);
         
@@ -103,6 +116,16 @@ public class GalleryController {
     public ResponseEntity<Void> deletePhoto(@PathVariable Long id) {
         galleryPhotoService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Genera le thumbnail per tutte le foto esistenti che non le hanno.
+     * Questo endpoint è utile per migrare foto caricate prima dell'implementazione delle thumbnail.
+     */
+    @PostMapping("/admin/generate-thumbnails")
+    public ResponseEntity<Map<String, Integer>> generateMissingThumbnails() {
+        Map<String, Integer> result = galleryPhotoService.generateMissingThumbnails();
+        return ResponseEntity.ok(result);
     }
 
     private String determineContentType(String filename) {

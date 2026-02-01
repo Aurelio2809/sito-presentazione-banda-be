@@ -17,12 +17,16 @@ public interface GalleryPhotoMapper {
     List<GalleryPhotoResponse> toResponseList(List<GalleryPhoto> photos);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "src", ignore = true)
+    @Mapping(target = "thumbnailSrc", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     GalleryPhoto toEntity(GalleryPhotoRequest request);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "src", ignore = true)
+    @Mapping(target = "thumbnailSrc", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
