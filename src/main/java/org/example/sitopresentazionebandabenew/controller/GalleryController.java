@@ -133,6 +133,16 @@ public class GalleryController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * Rigenera le thumbnail per tutte le foto (elimina le esistenti e rigenera con le dimensioni attuali).
+     * Utile dopo aver aumentato THUMBNAIL_WIDTH per migliorare la qualità in griglia.
+     */
+    @PostMapping("/admin/regenerate-thumbnails")
+    public ResponseEntity<Map<String, Integer>> regenerateAllThumbnails() {
+        Map<String, Integer> result = galleryPhotoService.regenerateAllThumbnails();
+        return ResponseEntity.ok(result);
+    }
+
     private String determineContentType(String filename) {
         String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
         return switch (extension) {

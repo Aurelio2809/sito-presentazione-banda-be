@@ -33,4 +33,11 @@ public interface GalleryPhotoService {
      * @return mappa con risultati: "processed", "success", "failed"
      */
     java.util.Map<String, Integer> generateMissingThumbnails();
+
+    /**
+     * Rigenera le thumbnail per tutte le foto (elimina le esistenti e rigenera).
+     * Utile dopo aver aumentato THUMBNAIL_WIDTH per avere thumbnail più grandi.
+     * @return mappa con risultati: "processed", "success", "failed"
+     */
+    java.util.Map<String, Integer> regenerateAllThumbnails();
 }

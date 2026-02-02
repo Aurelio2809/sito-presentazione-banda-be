@@ -32,6 +32,9 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
     @Override
     public void log(User user, ActionType action, TargetType targetType, Long targetId, String targetName, String details) {
+        if (user == null) {
+            return; // Skip logging se l'utente non è disponibile (es. contesto auth perso in richieste multipart)
+        }
         ActivityLog log = ActivityLog.builder()
                 .user(user)
                 .action(action)

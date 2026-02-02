@@ -248,6 +248,25 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
         return result;
     }
 
+    @Override
+    public Map<String, Integer> regenerateAllThumbnails() {
+        List<GalleryPhoto> allPhotos = photoRepository.findAll();
+        for (GalleryPhoto photo : allPhotos) {
+            String src = photo.getSrc();
+            if (src != null && src.contains("/")) {
+                String filename = src.substring(src.lastIndexOf("/") + 1);
+                try {
+                    fileStorageService.deleteThumbnailFile(filename);
+                } catch (Exception ignored) {
+                    // thumb inesistente o errore: procedi comunque
+                }
+                photo.setThumbnailSrc(null);
+                photoRepository.save(photo);
+            }
+        }
+        return generateMissingThumbnails();
+    }
+
     private GalleryPhoto findPhotoOrThrow(Long id) {
         return photoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Foto", "id", id));

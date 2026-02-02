@@ -31,9 +31,9 @@ import java.util.UUID;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    /** Larghezza thumbnail: sufficiente per griglia e mosaic senza upscale (≈ 1 colonna × 2 per retina). */
-    private static final int THUMBNAIL_WIDTH = 1024;
-    
+    /** Dimensione massima (lato più lungo): mantiene risoluzione originale fino a 4K (3840px). */
+    private static final int MAX_THUMBNAIL_DIMENSION = 3840;
+
     private final Path photosStorageLocation;
     private final Path thumbnailsStorageLocation;
     private final StorageProperties storageProperties;
@@ -96,44 +96,71 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             BufferedImage originalImage = ImageIO.read(originalPath.toFile());
             if (originalImage == null) {
-                return; // Non è possibile leggere l'immagine
+                // Formato non supportato da ImageIO (es. WebP senza plugin): copia l'originale come thumbnail
+                Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
+                Files.copy(originalPath, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+                System.err.println("Thumbnail: formato non leggibile da ImageIO per " + filename + ", copiato originale in thumbnails");
+                return;
             }
 
             int originalWidth = originalImage.getWidth();
             int originalHeight = originalImage.getHeight();
+            int maxSide = Math.max(originalWidth, originalHeight);
 
-            // Calcola le dimensioni mantenendo l'aspect ratio
-            int thumbnailHeight;
+            // Mantieni risoluzione originale fino a 4K; scala solo se supera
             int thumbnailWidth;
-            
-            if (originalWidth <= THUMBNAIL_WIDTH) {
-                // L'immagine è già più piccola della thumbnail, copia l'originale
+            int thumbnailHeight;
+            if (maxSide <= MAX_THUMBNAIL_DIMENSION) {
                 thumbnailWidth = originalWidth;
                 thumbnailHeight = originalHeight;
             } else {
-                thumbnailWidth = THUMBNAIL_WIDTH;
-                thumbnailHeight = (int) ((double) originalHeight / originalWidth * THUMBNAIL_WIDTH);
+                double scale = (double) MAX_THUMBNAIL_DIMENSION / maxSide;
+                thumbnailWidth = (int) Math.round(originalWidth * scale);
+                thumbnailHeight = (int) Math.round(originalHeight * scale);
             }
 
-            // Crea la thumbnail
-            BufferedImage thumbnail = new BufferedImage(thumbnailWidth, thumbnailHeight, BufferedImage.TYPE_INT_RGB);
+            Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
+
+            // Se dimensioni uguali all'originale: copia il file senza ri-encoding (qualità 100%)
+            if (thumbnailWidth == originalWidth && thumbnailHeight == originalHeight) {
+                Files.copy(originalPath, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+                return;
+            }
+
+            // Ridimensionamento con massima qualità
+            int imageType = "png".equalsIgnoreCase(extension) && originalImage.getColorModel().hasAlpha()
+                ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+
+            BufferedImage thumbnail = new BufferedImage(thumbnailWidth, thumbnailHeight, imageType);
             Graphics2D g2d = thumbnail.createGraphics();
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
             g2d.drawImage(originalImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
             g2d.dispose();
 
-            // Salva la thumbnail (JPEG con qualità esplicita per nitidezza in griglia)
-            Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
             if ("png".equalsIgnoreCase(extension)) {
-                ImageIO.write(thumbnail, "png", thumbnailPath.toFile());
+                writePngWithQuality(thumbnail, thumbnailPath.toFile(), storageProperties.getThumbnailPngQuality());
             } else {
-                writeJpegWithQuality(thumbnail, thumbnailPath.toFile(), 0.88f);
+                writeJpegWithQuality(thumbnail, thumbnailPath.toFile(), storageProperties.getThumbnailJpegQuality());
             }
         } catch (IOException e) {
-            // Log error but don't fail the upload
-            System.err.println("Errore nella generazione della thumbnail: " + e.getMessage());
+            // Per WebP/GIF non supportati da ImageIO: copia l'originale come thumbnail
+            String ext = extension != null ? extension.toLowerCase() : "";
+            if ("webp".equals(ext) || "gif".equals(ext)) {
+                try {
+                    Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
+                    Files.copy(originalPath, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+                    System.err.println("Thumbnail: lettura fallita per " + filename + " (" + ext + "), copiato originale in thumbnails: " + e.getMessage());
+                } catch (IOException copyEx) {
+                    System.err.println("Errore nella generazione della thumbnail: " + e.getMessage());
+                }
+            } else {
+                System.err.println("Errore nella generazione della thumbnail: " + e.getMessage());
+            }
         }
     }
 
@@ -141,6 +168,30 @@ public class FileStorageServiceImpl implements FileStorageService {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
         if (!writers.hasNext()) {
             ImageIO.write(image, "jpg", outputFile);
+            return;
+        }
+        ImageWriter writer = writers.next();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(outputFile)) {
+            writer.setOutput(ios);
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            if (param.canWriteCompressed()) {
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(quality);
+            }
+            writer.write(null, new IIOImage(image, null, null), param);
+        } finally {
+            writer.dispose();
+        }
+    }
+
+    /**
+     * Scrive una thumbnail PNG con qualità controllata tramite ImageWriter + ImageWriteParam.
+     * Usa MODE_EXPLICIT e setCompressionQuality(quality) dove supportato dal writer.
+     */
+    private static void writePngWithQuality(BufferedImage image, java.io.File outputFile, float quality) throws IOException {
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("png");
+        if (!writers.hasNext()) {
+            ImageIO.write(image, "png", outputFile);
             return;
         }
         ImageWriter writer = writers.next();
@@ -204,10 +255,22 @@ public class FileStorageServiceImpl implements FileStorageService {
             Files.deleteIfExists(filePath);
             
             // Elimina anche la thumbnail
-            Path thumbnailPath = thumbnailsStorageLocation.resolve(filename).normalize();
-            Files.deleteIfExists(thumbnailPath);
+            deleteThumbnailFile(filename);
         } catch (IOException e) {
             throw new FileStorageException("Errore durante l'eliminazione del file: " + filename, e);
+        }
+    }
+
+    @Override
+    public void deleteThumbnailFile(String filename) {
+        try {
+            Path thumbnailPath = thumbnailsStorageLocation.resolve(filename).normalize();
+            if (!thumbnailPath.getParent().equals(thumbnailsStorageLocation)) {
+                throw new FileStorageException("Percorso thumbnail non valido");
+            }
+            Files.deleteIfExists(thumbnailPath);
+        } catch (IOException e) {
+            throw new FileStorageException("Errore durante l'eliminazione della thumbnail: " + filename, e);
         }
     }
 

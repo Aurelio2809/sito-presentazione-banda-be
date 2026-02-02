@@ -1,5 +1,6 @@
 package org.example.sitopresentazionebandabenew.dto.responses;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +18,16 @@ public class GalleryPhotoResponse {
     private String title;
     private String description;
     private String location;
+
+    @JsonProperty("photoYear")
     private Integer photoYear;
+
+    @JsonProperty("photoMonth")
     private Integer photoMonth;
+
+    @JsonProperty("photoDay")
     private Integer photoDay;
+
     private boolean favorite;
     private Integer displayOrder;
 }

@@ -20,6 +20,12 @@ public interface FileStorageService {
     String getThumbnailUrl(String filename);
 
     /**
+     * Elimina il file thumbnail (per permettere rigenerazione).
+     * @param filename il nome del file originale
+     */
+    void deleteThumbnailFile(String filename);
+
+    /**
      * Genera una thumbnail per un file esistente.
      * @param filename il nome del file originale
      * @return true se la thumbnail è stata generata con successo, false altrimenti
