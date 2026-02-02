@@ -3,7 +3,6 @@ package org.example.sitopresentazionebandabenew.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,7 +32,14 @@ public class GalleryPhoto {
     @Column(length = 200)
     private String location;
 
-    private LocalDate photoDate;
+    @Column(name = "photo_year")
+    private Integer photoYear;
+
+    @Column(name = "photo_month")
+    private Integer photoMonth;
+
+    @Column(name = "photo_day")
+    private Integer photoDay;
 
     @Column(nullable = false)
     private boolean favorite;

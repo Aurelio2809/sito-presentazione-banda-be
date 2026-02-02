@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +24,9 @@ public class GalleryPhotoRequest {
     @Size(max = 200, message = "Luogo massimo 200 caratteri")
     private String location;
 
-    private LocalDate photoDate;
+    private Integer photoYear;
+    private Integer photoMonth;
+    private Integer photoDay;
 
     private boolean favorite;
 

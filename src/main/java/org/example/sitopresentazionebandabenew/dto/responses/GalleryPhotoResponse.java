@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,7 +17,9 @@ public class GalleryPhotoResponse {
     private String title;
     private String description;
     private String location;
-    private LocalDate photoDate;
+    private Integer photoYear;
+    private Integer photoMonth;
+    private Integer photoDay;
     private boolean favorite;
     private Integer displayOrder;
 }
