@@ -105,7 +105,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     @Transactional(readOnly = true)
     public Page<GalleryPhotoResponse> getPublicPhotos(Pageable pageable, String sortBy) {
         if ("date".equalsIgnoreCase(sortBy)) {
-            return photoRepository.findAllOrderByCreatedAtDesc(pageable)
+            return photoRepository.findAllOrderByPhotoDateDesc(pageable)
                     .map(photoMapper::toResponse);
         }
         return photoRepository.findAllOrderByDisplayOrderAsc(pageable)
@@ -215,6 +215,21 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
                 id,
                 title
         );
+    }
+
+    @Override
+    @Transactional
+    public int setDatesFromCreatedAtForPhotosWithoutDate() {
+        List<GalleryPhoto> withoutDate = photoRepository.findByPhotoYearIsNull();
+        for (GalleryPhoto photo : withoutDate) {
+            if (photo.getCreatedAt() != null) {
+                photo.setPhotoYear(photo.getCreatedAt().getYear());
+                photo.setPhotoMonth(photo.getCreatedAt().getMonthValue());
+                photo.setPhotoDay(photo.getCreatedAt().getDayOfMonth());
+                photoRepository.save(photo);
+            }
+        }
+        return withoutDate.size();
     }
 
     @Override

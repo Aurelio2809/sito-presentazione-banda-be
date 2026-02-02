@@ -17,7 +17,7 @@ public interface GalleryPhotoService {
     Page<GalleryPhotoResponse> getAll(Pageable pageable);
 
     /**
-     * Foto pubbliche con ordinamento: "order" = per indice (displayOrder), "date" = per data creazione.
+     * Foto pubbliche con ordinamento: "order" = per indice (displayOrder), "date" = per data foto (anno, mese, giorno).
      */
     Page<GalleryPhotoResponse> getPublicPhotos(Pageable pageable, String sortBy);
 
@@ -32,6 +32,12 @@ public interface GalleryPhotoService {
     GalleryPhotoResponse updateDisplayOrder(Long id, Integer order);
 
     void delete(Long id);
+
+    /**
+     * Imposta anno/mese/giorno (da createdAt) su tutte le foto che non hanno ancora data.
+     * Utile per dare una data alle foto già caricate.
+     */
+    int setDatesFromCreatedAtForPhotosWithoutDate();
 
     /**
      * Genera le thumbnail per tutte le foto che non le hanno.

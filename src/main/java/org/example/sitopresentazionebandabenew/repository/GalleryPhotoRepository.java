@@ -23,6 +23,10 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
     @Query("SELECT p FROM GalleryPhoto p ORDER BY p.createdAt DESC")
     Page<GalleryPhoto> findAllOrderByCreatedAtDesc(Pageable pageable);
 
+    /** Ordine per data della foto (anno, mese, giorno) dalla più recente; senza data in coda. */
+    @Query("SELECT p FROM GalleryPhoto p ORDER BY COALESCE(p.photoYear, -1) DESC, COALESCE(p.photoMonth, -1) DESC, COALESCE(p.photoDay, -1) DESC")
+    Page<GalleryPhoto> findAllOrderByPhotoDateDesc(Pageable pageable);
+
     /** Ordine per indice (displayOrder), nulli in coda, poi per data creazione. */
     @Query("SELECT p FROM GalleryPhoto p ORDER BY COALESCE(p.displayOrder, 999999) ASC, p.createdAt DESC")
     Page<GalleryPhoto> findAllOrderByDisplayOrderAsc(Pageable pageable);
@@ -32,4 +36,6 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
 
     @Query("SELECT p FROM GalleryPhoto p WHERE p.thumbnailSrc IS NULL")
     List<GalleryPhoto> findPhotosWithoutThumbnail();
+
+    List<GalleryPhoto> findByPhotoYearIsNull();
 }
