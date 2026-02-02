@@ -1,5 +1,6 @@
 package org.example.sitopresentazionebandabenew.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.example.sitopresentazionebandabenew.dto.requests.GalleryPhotoRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.GalleryPhotoResponse;
@@ -24,10 +25,12 @@ public class GalleryController {
 
     private final GalleryPhotoService galleryPhotoService;
     private final FileStorageService fileStorageService;
+    private final ObjectMapper objectMapper;
 
-    public GalleryController(GalleryPhotoService galleryPhotoService, FileStorageService fileStorageService) {
+    public GalleryController(GalleryPhotoService galleryPhotoService, FileStorageService fileStorageService, ObjectMapper objectMapper) {
         this.galleryPhotoService = galleryPhotoService;
         this.fileStorageService = fileStorageService;
+        this.objectMapper = objectMapper;
     }
 
     // ==================== ENDPOINT PUBBLICI ====================
@@ -88,7 +91,9 @@ public class GalleryController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GalleryPhotoResponse> uploadPhoto(
             @RequestPart("file") MultipartFile file,
-            @RequestPart("metadata") @Valid GalleryPhotoRequest metadata) {
+            @RequestPart("metadata") MultipartFile metadataPart) throws java.io.IOException {
+        String metadataJson = new String(metadataPart.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        GalleryPhotoRequest metadata = objectMapper.readValue(metadataJson, GalleryPhotoRequest.class);
         GalleryPhotoResponse response = galleryPhotoService.uploadPhoto(file, metadata);
         return ResponseEntity.ok(response);
     }
