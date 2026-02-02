@@ -11,7 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -21,12 +25,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Iterator;
 import java.util.UUID;
 
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    private static final int THUMBNAIL_WIDTH = 400;
+    /** Larghezza thumbnail: sufficiente per griglia e mosaic senza upscale (≈ 1 colonna × 2 per retina). */
+    private static final int THUMBNAIL_WIDTH = 1024;
     
     private final Path photosStorageLocation;
     private final Path thumbnailsStorageLocation;
@@ -118,13 +124,36 @@ public class FileStorageServiceImpl implements FileStorageService {
             g2d.drawImage(originalImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
             g2d.dispose();
 
-            // Salva la thumbnail
+            // Salva la thumbnail (JPEG con qualità esplicita per nitidezza in griglia)
             Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
-            String formatName = extension.equalsIgnoreCase("png") ? "png" : "jpg";
-            ImageIO.write(thumbnail, formatName, thumbnailPath.toFile());
+            if ("png".equalsIgnoreCase(extension)) {
+                ImageIO.write(thumbnail, "png", thumbnailPath.toFile());
+            } else {
+                writeJpegWithQuality(thumbnail, thumbnailPath.toFile(), 0.88f);
+            }
         } catch (IOException e) {
             // Log error but don't fail the upload
             System.err.println("Errore nella generazione della thumbnail: " + e.getMessage());
+        }
+    }
+
+    private static void writeJpegWithQuality(BufferedImage image, java.io.File outputFile, float quality) throws IOException {
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+        if (!writers.hasNext()) {
+            ImageIO.write(image, "jpg", outputFile);
+            return;
+        }
+        ImageWriter writer = writers.next();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(outputFile)) {
+            writer.setOutput(ios);
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            if (param.canWriteCompressed()) {
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(quality);
+            }
+            writer.write(null, new IIOImage(image, null, null), param);
+        } finally {
+            writer.dispose();
         }
     }
 
