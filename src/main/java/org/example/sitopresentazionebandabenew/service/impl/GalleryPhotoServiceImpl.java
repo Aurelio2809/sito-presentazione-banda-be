@@ -103,6 +103,17 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<GalleryPhotoResponse> getPublicPhotos(Pageable pageable, String sortBy) {
+        if ("date".equalsIgnoreCase(sortBy)) {
+            return photoRepository.findAllOrderByCreatedAtDesc(pageable)
+                    .map(photoMapper::toResponse);
+        }
+        return photoRepository.findAllOrderByDisplayOrderAsc(pageable)
+                .map(photoMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<GalleryPhotoResponse> getFavorites() {
         return photoMapper.toResponseList(
                 photoRepository.findByFavoriteTrueOrderByDisplayOrderAsc()

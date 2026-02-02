@@ -23,6 +23,10 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
     @Query("SELECT p FROM GalleryPhoto p ORDER BY p.createdAt DESC")
     Page<GalleryPhoto> findAllOrderByCreatedAtDesc(Pageable pageable);
 
+    /** Ordine per indice (displayOrder), nulli in coda, poi per data creazione. */
+    @Query("SELECT p FROM GalleryPhoto p ORDER BY COALESCE(p.displayOrder, 999999) ASC, p.createdAt DESC")
+    Page<GalleryPhoto> findAllOrderByDisplayOrderAsc(Pageable pageable);
+
     @Query("SELECT MAX(p.displayOrder) FROM GalleryPhoto p WHERE p.favorite = true")
     Integer findMaxDisplayOrder();
 

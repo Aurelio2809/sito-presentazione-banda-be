@@ -37,8 +37,9 @@ public class GalleryController {
 
     @GetMapping("/public")
     public ResponseEntity<Page<GalleryPhotoResponse>> getPublicPhotos(
-            @PageableDefault(size = 12) Pageable pageable) {
-        return ResponseEntity.ok(galleryPhotoService.getAll(pageable));
+            @PageableDefault(size = 12) Pageable pageable,
+            @RequestParam(required = false, defaultValue = "order") String sort) {
+        return ResponseEntity.ok(galleryPhotoService.getPublicPhotos(pageable, sort));
     }
 
     @GetMapping("/public/favorites")

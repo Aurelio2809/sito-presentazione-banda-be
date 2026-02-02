@@ -16,6 +16,11 @@ public interface GalleryPhotoService {
 
     Page<GalleryPhotoResponse> getAll(Pageable pageable);
 
+    /**
+     * Foto pubbliche con ordinamento: "order" = per indice (displayOrder), "date" = per data creazione.
+     */
+    Page<GalleryPhotoResponse> getPublicPhotos(Pageable pageable, String sortBy);
+
     List<GalleryPhotoResponse> getFavorites();
 
     Page<GalleryPhotoResponse> getNonFavorites(Pageable pageable);
