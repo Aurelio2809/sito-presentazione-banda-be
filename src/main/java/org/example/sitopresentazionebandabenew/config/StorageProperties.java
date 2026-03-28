@@ -17,9 +17,9 @@ public class StorageProperties {
     private List<String> allowedExtensions = List.of("jpg", "jpeg", "png", "gif", "webp");
 
     /** Qualità JPEG per thumbnail scalate (0.0–1.0). Default 1.0 = massima qualità. */
-    private float thumbnailJpegQuality = 1.0f;
+    private float thumbnailJpegQuality = 0.85f;
     /** Qualità PNG per thumbnail scalate (0.0–1.0). Default 1.0 = massima qualità. */
-    private float thumbnailPngQuality = 1.0f;
+    private float thumbnailPngQuality = 0.85f;
 
     public String getPhotosPath() {
         return uploadDir + "/" + photosDir;
