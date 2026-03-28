@@ -67,6 +67,10 @@ public class GalleryInitialSeeder {
                 } else {
                     log.info("[Seeder] Cartella /app/foto non montata. Salto il seeding.");
                 }
+                
+                log.info("[Seeder] Forzo la rigenerazione di tutte le thumbnail (risoluzione 800px) sui file esistenti...");
+                service.regenerateAllThumbnails();
+                log.info("[Seeder] Rigenerazione completata.");
             } catch (Exception e) {
                 log.error("[Seeder] Errore critico durante l'inzilizzazione delle foto hi-res", e);
             }
