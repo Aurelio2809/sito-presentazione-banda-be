@@ -1,0 +1,35 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches:
+      - integrazione
+
+jobs:
+  deploy:
+    name: SSH Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            # Vai nella cartella del backend
+            cd ${{ secrets.VPS_PROJECT_PATH }}/sito-presentazione-banda-be-new
+
+            # Aggiorna il codice
+            git pull origin integrazione
+
+            # Torna alla root del progetto (dove c'è docker-compose.yml)
+            cd ${{ secrets.VPS_PROJECT_PATH }}
+
+            # Ricostruisce e riavvia solo il container backend
+            docker compose up --build -d backend
+
+            echo "✅ Deploy completato"
