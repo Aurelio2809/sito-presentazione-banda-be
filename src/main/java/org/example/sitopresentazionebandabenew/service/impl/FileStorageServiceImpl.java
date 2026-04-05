@@ -34,6 +34,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     /** Dimensione massima (lato più lungo) per le thumbnail: ottimizzata per web. */
     private static final int MAX_THUMBNAIL_DIMENSION = 800;
 
+    /** Dimensione massima (lato più lungo) per le foto originali: 2K per risparmiare spazio. */
+    private static final int MAX_ORIGINAL_DIMENSION = 2048;
+
     private final Path photosStorageLocation;
     private final Path thumbnailsStorageLocation;
     private final StorageProperties storageProperties;
@@ -78,10 +81,11 @@ public class FileStorageServiceImpl implements FileStorageService {
                 throw new FileStorageException("Percorso file non valido");
             }
 
-            // Salva il file originale
+            // Salva il file originale compresso a max 2K
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);
             }
+            compressOriginalToMaxDimension(targetLocation, extension);
 
             // Genera thumbnail
             generateThumbnail(targetLocation, uniqueFilename, extension);
@@ -89,6 +93,42 @@ public class FileStorageServiceImpl implements FileStorageService {
             return uniqueFilename;
         } catch (IOException e) {
             throw new FileStorageException("Errore durante il salvataggio del file: " + originalFilename, e);
+        }
+    }
+
+    private void compressOriginalToMaxDimension(Path filePath, String extension) {
+        try {
+            BufferedImage image = ImageIO.read(filePath.toFile());
+            if (image == null) return; // formato non supportato, lascia invariato
+
+            int originalWidth = image.getWidth();
+            int originalHeight = image.getHeight();
+            int maxSide = Math.max(originalWidth, originalHeight);
+
+            if (maxSide <= MAX_ORIGINAL_DIMENSION) return; // già abbastanza piccola
+
+            double scale = (double) MAX_ORIGINAL_DIMENSION / maxSide;
+            int newWidth = (int) Math.round(originalWidth * scale);
+            int newHeight = (int) Math.round(originalHeight * scale);
+
+            int imageType = "png".equalsIgnoreCase(extension) && image.getColorModel().hasAlpha()
+                ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+
+            BufferedImage resized = new BufferedImage(newWidth, newHeight, imageType);
+            Graphics2D g2d = resized.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawImage(image, 0, 0, newWidth, newHeight, null);
+            g2d.dispose();
+
+            if ("png".equalsIgnoreCase(extension)) {
+                writePngWithQuality(resized, filePath.toFile(), storageProperties.getThumbnailPngQuality());
+            } else {
+                writeJpegWithQuality(resized, filePath.toFile(), 0.90f);
+            }
+        } catch (IOException e) {
+            System.err.println("Compressione originale fallita per " + filePath.getFileName() + ": " + e.getMessage());
         }
     }
 
