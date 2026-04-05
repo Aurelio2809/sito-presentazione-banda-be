@@ -7,24 +7,11 @@ on:
 
 jobs:
   deploy:
-    name: SCP + Docker Deploy BE
+    name: SSH Deploy BE
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Copy BE source to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "."
-          target: "${{ secrets.VPS_PROJECT_PATH }}/sito-presentazione-banda-be-new"
-          strip_components: 0
-
-      - name: Build and restart backend container
+      - name: Pull and rebuild backend on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -32,6 +19,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
+            cd ${{ secrets.VPS_PROJECT_PATH }}/sito-presentazione-banda-be-new
+            git pull origin integrazione
             cd ${{ secrets.VPS_PROJECT_PATH }}
             docker compose up --build -d backend
             echo "✅ BE Deploy completato"
