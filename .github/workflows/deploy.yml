@@ -16,6 +16,6 @@ jobs:
 
       - name: Rebuild backend container
         run: |
-          cd ${{ secrets.VPS_PROJECT_PATH }}
+          cd /opt/stacks/sito-banda
           docker compose up --build -d backend
           echo "✅ BE Deploy completato"
