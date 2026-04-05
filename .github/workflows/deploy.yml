@@ -7,20 +7,15 @@ on:
 
 jobs:
   deploy:
-    name: SSH Deploy BE
-    runs-on: ubuntu-latest
+    name: Deploy BE
+    runs-on: self-hosted
 
     steps:
-      - name: Pull and rebuild backend on VPS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd ${{ secrets.VPS_PROJECT_PATH }}/sito-presentazione-banda-be-new
-            git pull origin integrazione
-            cd ${{ secrets.VPS_PROJECT_PATH }}
-            docker compose up --build -d backend
-            echo "✅ BE Deploy completato"
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Rebuild backend container
+        run: |
+          cd ${{ secrets.VPS_PROJECT_PATH }}
+          docker compose up --build -d backend
+          echo "✅ BE Deploy completato"
