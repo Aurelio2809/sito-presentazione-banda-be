@@ -31,8 +31,8 @@ import java.util.UUID;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    /** Dimensione massima (lato più lungo): mantiene risoluzione originale fino a 4K (3840px). */
-    private static final int MAX_THUMBNAIL_DIMENSION = 1600;
+    /** Dimensione massima (lato più lungo) per le thumbnail: ottimizzata per web. */
+    private static final int MAX_THUMBNAIL_DIMENSION = 800;
 
     private final Path photosStorageLocation;
     private final Path thumbnailsStorageLocation;
