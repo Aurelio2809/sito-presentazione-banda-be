@@ -251,9 +251,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public Resource loadPhotoAsResource(String filename) {
         try {
-            Path filePath = photosStorageLocation.resolve(filename).normalize();
+            Path filePath = resolveWithin(photosStorageLocation, filename);
             Resource resource = new UrlResource(filePath.toUri());
-            
+
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
@@ -264,10 +264,22 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
+    /**
+     * Risolve {@code filename} all'interno di {@code baseDir} e verifica che il path risultante
+     * non esca dalla directory consentita (difesa contro path traversal, es. "../../etc/passwd").
+     */
+    private Path resolveWithin(Path baseDir, String filename) {
+        Path resolved = baseDir.resolve(filename).normalize();
+        if (!resolved.startsWith(baseDir)) {
+            throw new ResourceNotFoundException("Percorso file non valido: " + filename);
+        }
+        return resolved;
+    }
+
     @Override
     public Resource loadThumbnailAsResource(String filename) {
         try {
-            Path filePath = thumbnailsStorageLocation.resolve(filename).normalize();
+            Path filePath = resolveWithin(thumbnailsStorageLocation, filename);
             Resource resource = new UrlResource(filePath.toUri());
             
             if (resource.exists() && resource.isReadable()) {
