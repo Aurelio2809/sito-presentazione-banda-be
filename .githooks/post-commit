@@ -1,0 +1,38 @@
+#!/bin/bash
+# Aggiorna CLAUDE.md dopo ogni commit tramite l'agente wiki-curator, in modo
+# ASINCRONO (non blocca mai il commit). Vedi .claude/agents/wiki-curator.md
+# per le istruzioni che l'agente segue.
+#
+# Abilitazione (una volta per clone / macchina):
+#   git config core.hooksPath .githooks
+#
+# Disabilitazione:
+#   git config --unset core.hooksPath
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 0
+
+LOG="$REPO_ROOT/.githooks/wiki-curator.log"
+SHA="$(git rev-parse HEAD)"
+MSG="$(git log -1 --pretty=%s "$SHA")"
+
+# Evita loop: non rianalizzare i commit generati da questo stesso hook.
+case "$MSG" in
+  *"[auto]"*) exit 0 ;;
+esac
+
+# Se il CLI claude non e' installato su questa macchina, non bloccare il commit.
+command -v claude >/dev/null 2>&1 || exit 0
+
+{
+  echo "=== $(date '+%Y-%m-%d %H:%M:%S') - commit $SHA ==="
+} >> "$LOG" 2>&1
+
+nohup claude -p "Leggi .claude/agents/wiki-curator.md e segui le sue istruzioni per il commit $SHA (usa: git show --stat $SHA e git diff ${SHA}~1 $SHA)." \
+  --allowedTools "Read,Grep,Glob,Bash(git:*),Edit" \
+  --permission-mode acceptEdits \
+  --max-budget-usd 0.50 \
+  >> "$LOG" 2>&1 &
+
+disown 2>/dev/null || true
+exit 0

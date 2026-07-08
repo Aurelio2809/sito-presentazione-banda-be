@@ -36,6 +36,11 @@ dashboard admin. **In produzione** dietro reverse proxy Caddy (instrada solo `/a
 - `GET /api/events/public/**` (pubblici); CRUD eventi (admin).
 - `POST /api/messages` (form contatti, pubblico); lettura/gestione inbox (admin).
 - Upload immagini: multipart, estensioni whitelisted, nomi UUID, ottimizzazione/thumbnail server-side.
+  **Qualità thumbnail = 0.82** (`app.storage.thumbnail-jpeg-quality`), non 1.0: a qualità 1.0 le
+  thumbnail (max 800px lato lungo) risultavano più pesanti della foto originale (es. 488KB vs
+  281KB), lente da caricare senza beneficio visivo reale. 0.82 è lo standard "quasi-lossless" per il
+  web. `GalleryInitialSeeder` chiama `regenerateAllThumbnails()` ad ogni avvio: cambiare questo
+  valore si applica da solo alle foto già pubblicate al prossimo deploy, senza bisogno di login admin.
 
 ## Convenzioni
 - Validazione input con `@Valid` + vincoli sui DTO (`@NotBlank`, `@Email`, `@Size`).
@@ -51,3 +56,8 @@ committare/pushare senza richiesta esplicita.
 
 ## Agenti (`.claude/agents/`)
 - `security-auditor` — audit di sicurezza del backend (read-only, no deploy).
+- `wiki-curator` — analizza un commit e aggiorna questo file se una convenzione è cambiata.
+  Pensato per essere invocato dopo ogni commit (es. via hook `.githooks/post-commit`, non ancora
+  attivato di default: l'attivazione automatica di un agente che fa commit da solo richiede
+  un'autorizzazione esplicita dell'utente — vedi `.githooks/post-commit` per i dettagli). Può
+  comunque essere richiamato a mano ("aggiorna la wiki").

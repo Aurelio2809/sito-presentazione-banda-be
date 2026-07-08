@@ -34,3 +34,6 @@ build/
 
 ### Uploads ###
 uploads/
+
+### Log runtime dell'hook wiki-curator (vedi .githooks/post-commit) ###
+.githooks/wiki-curator.log
