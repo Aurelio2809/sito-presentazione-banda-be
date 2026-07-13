@@ -1,5 +1,6 @@
 package org.example.sitopresentazionebandabenew.config;
 
+import java.time.LocalDateTime;
 import org.example.sitopresentazionebandabenew.entity.User;
 import org.example.sitopresentazionebandabenew.repository.UserRepository;
 import org.slf4j.Logger;
@@ -7,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.LocalDateTime;
 
 /**
  * Migrazione di sicurezza: neutralizza la credenziale di default "test"/"test" (debole, nota) e
@@ -34,9 +33,8 @@ public class AdminUsersSecurityMigration {
     @Bean
     public CommandLineRunner migrateDefaultAdminUsers(UserRepository userRepository) {
         return args -> {
-            boolean testStillActive = userRepository.findByUsername("test")
-                    .map(User::isEnabled)
-                    .orElse(false);
+            boolean testStillActive =
+                    userRepository.findByUsername("test").map(User::isEnabled).orElse(false);
             if (testStillActive) {
                 log.info("[Migrazione sicurezza] Disabilitazione utente di default 'test'...");
                 userRepository.findByUsername("test").ifPresent(testUser -> {
@@ -47,13 +45,25 @@ public class AdminUsersSecurityMigration {
                 });
             }
 
-            createIfMissing(userRepository, "aurelio99", "aurelio99@bandamusicale.local",
+            createIfMissing(
+                    userRepository,
+                    "aurelio99",
+                    "aurelio99@bandamusicale.local",
                     "$2a$10$us54aO2Bhf1UTMySlnr.N.kSw6G.3wcMzTQjDTrmXSwwCFlAtNJ9y");
-            createIfMissing(userRepository, "gianmarco99", "gianmarco99@bandamusicale.local",
+            createIfMissing(
+                    userRepository,
+                    "gianmarco99",
+                    "gianmarco99@bandamusicale.local",
                     "$2a$10$L1JclilWK0BCL3t1OyePZOcjPJOOniNS0hwM.s5i83o.OLPVI3ocy");
-            createIfMissing(userRepository, "pietrosib", "pietrosib@bandamusicale.local",
+            createIfMissing(
+                    userRepository,
+                    "pietrosib",
+                    "pietrosib@bandamusicale.local",
                     "$2a$10$5UE2DmjmGrOTY9s1pUfh6.rydRX0Ghi16WnLBNzTyKoRimSdORM6K");
-            createIfMissing(userRepository, "mario99", "mario99@bandamusicale.local",
+            createIfMissing(
+                    userRepository,
+                    "mario99",
+                    "mario99@bandamusicale.local",
                     "$2a$10$jPJpWPtHJu6w79VPSQom9OHzTzdOPee4aTwC2h7kMC3vMXO8.oHr.");
         };
     }

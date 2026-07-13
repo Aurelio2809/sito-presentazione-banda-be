@@ -1,21 +1,6 @@
 package org.example.sitopresentazionebandabenew.service.impl;
 
 import jakarta.annotation.PostConstruct;
-import org.example.sitopresentazionebandabenew.config.StorageProperties;
-import org.example.sitopresentazionebandabenew.exception.FileStorageException;
-import org.example.sitopresentazionebandabenew.exception.ResourceNotFoundException;
-import org.example.sitopresentazionebandabenew.service.FileStorageService;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -27,6 +12,20 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.UUID;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import org.example.sitopresentazionebandabenew.config.StorageProperties;
+import org.example.sitopresentazionebandabenew.exception.FileStorageException;
+import org.example.sitopresentazionebandabenew.exception.ResourceNotFoundException;
+import org.example.sitopresentazionebandabenew.service.FileStorageService;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
@@ -43,8 +42,10 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     public FileStorageServiceImpl(StorageProperties storageProperties) {
         this.storageProperties = storageProperties;
-        this.photosStorageLocation = Paths.get(storageProperties.getPhotosPath()).toAbsolutePath().normalize();
-        this.thumbnailsStorageLocation = photosStorageLocation.resolve("thumbnails").toAbsolutePath().normalize();
+        this.photosStorageLocation =
+                Paths.get(storageProperties.getPhotosPath()).toAbsolutePath().normalize();
+        this.thumbnailsStorageLocation =
+                photosStorageLocation.resolve("thumbnails").toAbsolutePath().normalize();
     }
 
     @PostConstruct
@@ -64,7 +65,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
 
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-        
+
         // Valida estensione
         String extension = getFileExtension(originalFilename);
         if (!isAllowedExtension(extension)) {
@@ -111,8 +112,10 @@ public class FileStorageServiceImpl implements FileStorageService {
             int newWidth = (int) Math.round(originalWidth * scale);
             int newHeight = (int) Math.round(originalHeight * scale);
 
-            int imageType = "png".equalsIgnoreCase(extension) && image.getColorModel().hasAlpha()
-                ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+            int imageType =
+                    "png".equalsIgnoreCase(extension) && image.getColorModel().hasAlpha()
+                            ? BufferedImage.TYPE_INT_ARGB
+                            : BufferedImage.TYPE_INT_RGB;
 
             BufferedImage resized = new BufferedImage(newWidth, newHeight, imageType);
             Graphics2D g2d = resized.createGraphics();
@@ -139,7 +142,8 @@ public class FileStorageServiceImpl implements FileStorageService {
                 // Formato non supportato da ImageIO (es. WebP senza plugin): copia l'originale come thumbnail
                 Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
                 Files.copy(originalPath, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
-                System.err.println("Thumbnail: formato non leggibile da ImageIO per " + filename + ", copiato originale in thumbnails");
+                System.err.println("Thumbnail: formato non leggibile da ImageIO per " + filename
+                        + ", copiato originale in thumbnails");
                 return;
             }
 
@@ -168,15 +172,18 @@ public class FileStorageServiceImpl implements FileStorageService {
             }
 
             // Ridimensionamento con massima qualità
-            int imageType = "png".equalsIgnoreCase(extension) && originalImage.getColorModel().hasAlpha()
-                ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+            int imageType = "png".equalsIgnoreCase(extension)
+                            && originalImage.getColorModel().hasAlpha()
+                    ? BufferedImage.TYPE_INT_ARGB
+                    : BufferedImage.TYPE_INT_RGB;
 
             BufferedImage thumbnail = new BufferedImage(thumbnailWidth, thumbnailHeight, imageType);
             Graphics2D g2d = thumbnail.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+            g2d.setRenderingHint(
+                    RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
             g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
             g2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
             g2d.drawImage(originalImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
@@ -194,7 +201,8 @@ public class FileStorageServiceImpl implements FileStorageService {
                 try {
                     Path thumbnailPath = thumbnailsStorageLocation.resolve(filename);
                     Files.copy(originalPath, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
-                    System.err.println("Thumbnail: lettura fallita per " + filename + " (" + ext + "), copiato originale in thumbnails: " + e.getMessage());
+                    System.err.println("Thumbnail: lettura fallita per " + filename + " (" + ext
+                            + "), copiato originale in thumbnails: " + e.getMessage());
                 } catch (IOException copyEx) {
                     System.err.println("Errore nella generazione della thumbnail: " + e.getMessage());
                 }
@@ -204,7 +212,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-    private static void writeJpegWithQuality(BufferedImage image, java.io.File outputFile, float quality) throws IOException {
+    private static void writeJpegWithQuality(BufferedImage image, java.io.File outputFile, float quality)
+            throws IOException {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
         if (!writers.hasNext()) {
             ImageIO.write(image, "jpg", outputFile);
@@ -228,7 +237,8 @@ public class FileStorageServiceImpl implements FileStorageService {
      * Scrive una thumbnail PNG con qualità controllata tramite ImageWriter + ImageWriteParam.
      * Usa MODE_EXPLICIT e setCompressionQuality(quality) dove supportato dal writer.
      */
-    private static void writePngWithQuality(BufferedImage image, java.io.File outputFile, float quality) throws IOException {
+    private static void writePngWithQuality(BufferedImage image, java.io.File outputFile, float quality)
+            throws IOException {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("png");
         if (!writers.hasNext()) {
             ImageIO.write(image, "png", outputFile);
@@ -281,7 +291,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             Path filePath = resolveWithin(thumbnailsStorageLocation, filename);
             Resource resource = new UrlResource(filePath.toUri());
-            
+
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
@@ -298,14 +308,14 @@ public class FileStorageServiceImpl implements FileStorageService {
     public void deletePhoto(String filename) {
         try {
             Path filePath = photosStorageLocation.resolve(filename).normalize();
-            
+
             // Verifica path traversal
             if (!filePath.getParent().equals(photosStorageLocation)) {
                 throw new FileStorageException("Percorso file non valido");
             }
-            
+
             Files.deleteIfExists(filePath);
-            
+
             // Elimina anche la thumbnail
             deleteThumbnailFile(filename);
         } catch (IOException e) {
@@ -346,7 +356,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     public boolean generateThumbnailForExistingFile(String filename) {
         try {
             Path originalPath = photosStorageLocation.resolve(filename).normalize();
-            
+
             if (!Files.exists(originalPath)) {
                 System.err.println("File originale non trovato: " + filename);
                 return false;
@@ -360,7 +370,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
             String extension = getFileExtension(filename);
             generateThumbnail(originalPath, filename, extension);
-            
+
             // Verifica che la thumbnail sia stata creata
             return Files.exists(thumbnailPath);
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package org.example.sitopresentazionebandabenew.service.impl;
 
+import java.time.LocalDateTime;
 import org.example.sitopresentazionebandabenew.dto.requests.MessageRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.MessageResponse;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.ActionType;
@@ -18,8 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Service
 @Transactional
 public class MessageServiceImpl implements MessageService {
@@ -28,7 +27,8 @@ public class MessageServiceImpl implements MessageService {
     private final MessageMapper messageMapper;
     private final ActivityLogService activityLogService;
 
-    public MessageServiceImpl(MessageRepository messageRepository, MessageMapper messageMapper, ActivityLogService activityLogService) {
+    public MessageServiceImpl(
+            MessageRepository messageRepository, MessageMapper messageMapper, ActivityLogService activityLogService) {
         this.messageRepository = messageRepository;
         this.messageMapper = messageMapper;
         this.activityLogService = activityLogService;
@@ -51,33 +51,30 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional(readOnly = true)
     public Page<MessageResponse> getAll(Pageable pageable) {
-        return messageRepository.findAllByOrderByReceivedAtDesc(pageable)
-                .map(messageMapper::toResponse);
+        return messageRepository.findAllByOrderByReceivedAtDesc(pageable).map(messageMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<MessageResponse> getUnread(Pageable pageable) {
-        return messageRepository.findByReadFalseOrderByReceivedAtDesc(pageable)
-                .map(messageMapper::toResponse);
+        return messageRepository.findByReadFalseOrderByReceivedAtDesc(pageable).map(messageMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<MessageResponse> getRead(Pageable pageable) {
-        return messageRepository.findByReadTrueOrderByReceivedAtDesc(pageable)
-                .map(messageMapper::toResponse);
+        return messageRepository.findByReadTrueOrderByReceivedAtDesc(pageable).map(messageMapper::toResponse);
     }
 
     @Override
     public MessageResponse markAsRead(Long id) {
         Message message = findMessageOrThrow(id);
-        
+
         if (!message.isRead()) {
             message.setRead(true);
             message.setReadAt(LocalDateTime.now());
             message.setReadBy(getCurrentUser());
-            
+
             message = messageRepository.save(message);
 
             activityLogService.log(
@@ -85,8 +82,7 @@ public class MessageServiceImpl implements MessageService {
                     TargetType.MESSAGE,
                     message.getId(),
                     message.getSubject(),
-                    "Da: " + message.getSenderName()
-            );
+                    "Da: " + message.getSenderName());
         }
 
         return messageMapper.toResponse(message);
@@ -95,15 +91,14 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public int markAllAsRead() {
         int count = messageRepository.markAllAsRead();
-        
+
         if (count > 0) {
             activityLogService.log(
                     ActionType.READ,
                     TargetType.MESSAGE,
                     null,
                     "Tutti i messaggi",
-                    count + " messaggi segnati come letti"
-            );
+                    count + " messaggi segnati come letti");
         }
 
         return count;
@@ -126,8 +121,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private Message findMessageOrThrow(Long id) {
-        return messageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Messaggio", "id", id));
+        return messageRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Messaggio", "id", id));
     }
 
     private User getCurrentUser() {

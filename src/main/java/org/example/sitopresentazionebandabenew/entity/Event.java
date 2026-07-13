@@ -1,11 +1,10 @@
 package org.example.sitopresentazionebandabenew.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import lombok.*;
 
 @Entity
 @Table(name = "events")
@@ -78,10 +77,12 @@ public class Event {
     }
 
     public enum EventType {
-        EVENT, ANNOUNCEMENT
+        EVENT,
+        ANNOUNCEMENT
     }
 
     public enum EventStatus {
-        DRAFT, PUBLISHED
+        DRAFT,
+        PUBLISHED
     }
 }

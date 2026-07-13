@@ -10,8 +10,8 @@ public interface AuthService {
     UserResponse login(LoginRequest request);
 
     UserResponse getCurrentUser();
-    
+
     UserResponse updateProfile(UpdateProfileRequest request);
-    
+
     void changePassword(ChangePasswordRequest request);
 }

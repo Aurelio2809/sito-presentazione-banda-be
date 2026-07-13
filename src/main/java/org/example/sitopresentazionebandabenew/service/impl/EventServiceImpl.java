@@ -1,5 +1,7 @@
 package org.example.sitopresentazionebandabenew.service.impl;
 
+import java.time.LocalDate;
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.EventRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.EventResponse;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.ActionType;
@@ -20,9 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.List;
-
 @Service
 @Transactional
 public class EventServiceImpl implements EventService {
@@ -31,7 +30,8 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final ActivityLogService activityLogService;
 
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, ActivityLogService activityLogService) {
+    public EventServiceImpl(
+            EventRepository eventRepository, EventMapper eventMapper, ActivityLogService activityLogService) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.activityLogService = activityLogService;
@@ -41,7 +41,7 @@ public class EventServiceImpl implements EventService {
     public EventResponse create(EventRequest request) {
         Event event = eventMapper.toEntity(request);
         event.setCreatedBy(getCurrentUser());
-        
+
         Event savedEvent = eventRepository.save(event);
 
         TargetType targetType = savedEvent.getType() == EventType.EVENT ? TargetType.EVENT : TargetType.ANNOUNCEMENT;
@@ -84,50 +84,46 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventResponse> getUpcomingEvents() {
-        return eventMapper.toResponseList(
-                eventRepository.findUpcomingPublished(EventType.EVENT, LocalDate.now())
-        );
+        return eventMapper.toResponseList(eventRepository.findUpcomingPublished(EventType.EVENT, LocalDate.now()));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<EventResponse> getUpcomingAnnouncements() {
         return eventMapper.toResponseList(
-                eventRepository.findUpcomingPublished(EventType.ANNOUNCEMENT, LocalDate.now())
-        );
+                eventRepository.findUpcomingPublished(EventType.ANNOUNCEMENT, LocalDate.now()));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EventResponse> getPastEvents(Pageable pageable) {
-        return eventRepository.findPastPublished(EventType.EVENT, LocalDate.now(), pageable)
+        return eventRepository
+                .findPastPublished(EventType.EVENT, LocalDate.now(), pageable)
                 .map(eventMapper::toResponse);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<EventResponse> getPastEventsList() {
-        return eventMapper.toResponseList(
-                eventRepository.findPastPublishedList(EventType.EVENT, LocalDate.now())
-        );
+        return eventMapper.toResponseList(eventRepository.findPastPublishedList(EventType.EVENT, LocalDate.now()));
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public Page<EventResponse> getPublicAll(EventType type, Pageable pageable) {
         if (type != null) {
-            return eventRepository.findByTypeAndStatus(type, EventStatus.PUBLISHED, pageable)
+            return eventRepository
+                    .findByTypeAndStatus(type, EventStatus.PUBLISHED, pageable)
                     .map(eventMapper::toResponse);
         }
-        return eventRepository.findByStatus(EventStatus.PUBLISHED, pageable)
-                .map(eventMapper::toResponse);
+        return eventRepository.findByStatus(EventStatus.PUBLISHED, pageable).map(eventMapper::toResponse);
     }
 
     @Override
     public EventResponse update(Long id, EventRequest request) {
         Event event = findEventOrThrow(id);
         eventMapper.updateEntityFromRequest(request, event);
-        
+
         Event updatedEvent = eventRepository.save(event);
 
         TargetType targetType = updatedEvent.getType() == EventType.EVENT ? TargetType.EVENT : TargetType.ANNOUNCEMENT;
@@ -140,7 +136,7 @@ public class EventServiceImpl implements EventService {
     public EventResponse publish(Long id) {
         Event event = findEventOrThrow(id);
         event.setStatus(EventStatus.PUBLISHED);
-        
+
         Event updatedEvent = eventRepository.save(event);
 
         TargetType targetType = updatedEvent.getType() == EventType.EVENT ? TargetType.EVENT : TargetType.ANNOUNCEMENT;
@@ -153,7 +149,7 @@ public class EventServiceImpl implements EventService {
     public EventResponse unpublish(Long id) {
         Event event = findEventOrThrow(id);
         event.setStatus(EventStatus.DRAFT);
-        
+
         Event updatedEvent = eventRepository.save(event);
 
         TargetType targetType = updatedEvent.getType() == EventType.EVENT ? TargetType.EVENT : TargetType.ANNOUNCEMENT;
@@ -174,8 +170,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private Event findEventOrThrow(Long id) {
-        return eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Evento", "id", id));
+        return eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Evento", "id", id));
     }
 
     private User getCurrentUser() {

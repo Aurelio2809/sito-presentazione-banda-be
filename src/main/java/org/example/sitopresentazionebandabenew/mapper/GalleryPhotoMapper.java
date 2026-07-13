@@ -1,13 +1,12 @@
 package org.example.sitopresentazionebandabenew.mapper;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.GalleryPhotoRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.GalleryPhotoResponse;
 import org.example.sitopresentazionebandabenew.entity.GalleryPhoto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface GalleryPhotoMapper {

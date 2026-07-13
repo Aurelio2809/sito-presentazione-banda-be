@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateProfileRequest {
-    
+
     @Email(message = "Email non valida")
     @Size(max = 100, message = "Email troppo lunga")
     private String email;

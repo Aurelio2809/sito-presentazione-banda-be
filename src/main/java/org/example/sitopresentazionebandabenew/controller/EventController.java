@@ -1,6 +1,7 @@
 package org.example.sitopresentazionebandabenew.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.EventRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.EventResponse;
 import org.example.sitopresentazionebandabenew.entity.Event.EventStatus;
@@ -11,8 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
@@ -28,8 +27,7 @@ public class EventController {
 
     @GetMapping("/public")
     public ResponseEntity<Page<EventResponse>> getPublicEvents(
-            @RequestParam(required = false) EventType type,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) EventType type, @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(eventService.getPublicAll(type, pageable));
     }
 
@@ -60,7 +58,7 @@ public class EventController {
             @RequestParam(required = false) EventType type,
             @RequestParam(required = false) EventStatus status,
             @PageableDefault(size = 20) Pageable pageable) {
-        
+
         if (type != null && status != null) {
             return ResponseEntity.ok(eventService.getByTypeAndStatus(type, status, pageable));
         } else if (type != null) {
@@ -82,9 +80,7 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventResponse> updateEvent(
-            @PathVariable Long id,
-            @Valid @RequestBody EventRequest request) {
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @Valid @RequestBody EventRequest request) {
         return ResponseEntity.ok(eventService.update(id, request));
     }
 

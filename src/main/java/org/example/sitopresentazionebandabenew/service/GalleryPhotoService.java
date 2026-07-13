@@ -1,12 +1,11 @@
 package org.example.sitopresentazionebandabenew.service;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.GalleryPhotoRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.GalleryPhotoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 public interface GalleryPhotoService {
 

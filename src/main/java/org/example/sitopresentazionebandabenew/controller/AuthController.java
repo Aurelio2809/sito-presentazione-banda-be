@@ -29,16 +29,15 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-        
+
         UserResponse user = authService.login(request);
-        
+
         // Persisti il SecurityContext nella sessione HTTP
         SecurityContext context = SecurityContextHolder.getContext();
-        httpRequest.getSession(true).setAttribute(
-            HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, 
-            context
-        );
-        
+        httpRequest
+                .getSession(true)
+                .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
         return ResponseEntity.ok(user);
     }
 
@@ -46,18 +45,18 @@ public class AuthController {
     public ResponseEntity<UserResponse> getCurrentUser() {
         return ResponseEntity.ok(authService.getCurrentUser());
     }
-    
+
     @PutMapping("/profile")
     public ResponseEntity<UserResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(authService.updateProfile(request));
     }
-    
+
     @PostMapping("/change-password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
         return ResponseEntity.ok().build();
     }
-    
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         // Invalida la sessione

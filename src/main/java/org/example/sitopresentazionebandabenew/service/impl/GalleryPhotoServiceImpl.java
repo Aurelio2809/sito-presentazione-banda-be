@@ -1,5 +1,8 @@
 package org.example.sitopresentazionebandabenew.service.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.example.sitopresentazionebandabenew.dto.requests.GalleryPhotoRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.GalleryPhotoResponse;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.ActionType;
@@ -19,10 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @Transactional
@@ -51,11 +50,10 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
             long favoriteCount = photoRepository.countByFavoriteTrue();
             if (favoriteCount >= 7) {
                 throw new org.example.sitopresentazionebandabenew.exception.BadRequestException(
-                    "Limite massimo di 7 foto preferite raggiunto"
-                );
+                        "Limite massimo di 7 foto preferite raggiunto");
             }
         }
-        
+
         // Salva il file (genera anche la thumbnail)
         String filename = fileStorageService.storePhoto(file);
         String photoUrl = fileStorageService.getPhotoUrl(filename);
@@ -77,12 +75,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
 
         // Log attività
         activityLogService.log(
-                ActionType.UPLOAD,
-                TargetType.PHOTO,
-                savedPhoto.getId(),
-                savedPhoto.getTitle(),
-                "File: " + filename
-        );
+                ActionType.UPLOAD, TargetType.PHOTO, savedPhoto.getId(), savedPhoto.getTitle(), "File: " + filename);
 
         return photoMapper.toResponse(savedPhoto);
     }
@@ -97,40 +90,34 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     @Override
     @Transactional(readOnly = true)
     public Page<GalleryPhotoResponse> getAll(Pageable pageable) {
-        return photoRepository.findAllOrderByCreatedAtDesc(pageable)
-                .map(photoMapper::toResponse);
+        return photoRepository.findAllOrderByCreatedAtDesc(pageable).map(photoMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<GalleryPhotoResponse> getPublicPhotos(Pageable pageable, String sortBy) {
         if ("date".equalsIgnoreCase(sortBy)) {
-            return photoRepository.findAllOrderByPhotoDateDesc(pageable)
-                    .map(photoMapper::toResponse);
+            return photoRepository.findAllOrderByPhotoDateDesc(pageable).map(photoMapper::toResponse);
         }
-        return photoRepository.findAllOrderByDisplayOrderAsc(pageable)
-                .map(photoMapper::toResponse);
+        return photoRepository.findAllOrderByDisplayOrderAsc(pageable).map(photoMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<GalleryPhotoResponse> getFavorites() {
-        return photoMapper.toResponseList(
-                photoRepository.findByFavoriteTrueOrderByDisplayOrderAsc()
-        );
+        return photoMapper.toResponseList(photoRepository.findByFavoriteTrueOrderByDisplayOrderAsc());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<GalleryPhotoResponse> getNonFavorites(Pageable pageable) {
-        return photoRepository.findByFavoriteFalse(pageable)
-                .map(photoMapper::toResponse);
+        return photoRepository.findByFavoriteFalse(pageable).map(photoMapper::toResponse);
     }
 
     @Override
     public GalleryPhotoResponse update(Long id, GalleryPhotoRequest request) {
         GalleryPhoto photo = findPhotoOrThrow(id);
-        
+
         // Aggiorna solo i metadati, non il file
         String currentSrc = photo.getSrc();
         photoMapper.updateEntityFromRequest(request, photo);
@@ -138,12 +125,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
 
         GalleryPhoto updatedPhoto = photoRepository.save(photo);
 
-        activityLogService.log(
-                ActionType.UPDATE,
-                TargetType.PHOTO,
-                updatedPhoto.getId(),
-                updatedPhoto.getTitle()
-        );
+        activityLogService.log(ActionType.UPDATE, TargetType.PHOTO, updatedPhoto.getId(), updatedPhoto.getTitle());
 
         return photoMapper.toResponse(updatedPhoto);
     }
@@ -151,17 +133,16 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     @Override
     public GalleryPhotoResponse toggleFavorite(Long id) {
         GalleryPhoto photo = findPhotoOrThrow(id);
-        
+
         // Verifica limite 7 preferite prima di aggiungere
         if (!photo.isFavorite()) {
             long favoriteCount = photoRepository.countByFavoriteTrue();
             if (favoriteCount >= 7) {
                 throw new org.example.sitopresentazionebandabenew.exception.BadRequestException(
-                    "Limite massimo di 7 foto preferite raggiunto"
-                );
+                        "Limite massimo di 7 foto preferite raggiunto");
             }
         }
-        
+
         photo.setFavorite(!photo.isFavorite());
 
         if (photo.isFavorite()) {
@@ -180,8 +161,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
                 TargetType.PHOTO,
                 updatedPhoto.getId(),
                 updatedPhoto.getTitle(),
-                photo.isFavorite() ? "Aggiunto ai preferiti" : "Rimosso dai preferiti"
-        );
+                photo.isFavorite() ? "Aggiunto ai preferiti" : "Rimosso dai preferiti");
 
         return photoMapper.toResponse(updatedPhoto);
     }
@@ -190,7 +170,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     public GalleryPhotoResponse updateDisplayOrder(Long id, Integer order) {
         GalleryPhoto photo = findPhotoOrThrow(id);
         photo.setDisplayOrder(order);
-        
+
         GalleryPhoto updatedPhoto = photoRepository.save(photo);
         return photoMapper.toResponse(updatedPhoto);
     }
@@ -209,12 +189,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
 
         photoRepository.delete(photo);
 
-        activityLogService.log(
-                ActionType.DELETE,
-                TargetType.PHOTO,
-                id,
-                title
-        );
+        activityLogService.log(ActionType.DELETE, TargetType.PHOTO, id, title);
     }
 
     @Override
@@ -235,26 +210,26 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     @Override
     public Map<String, Integer> generateMissingThumbnails() {
         List<GalleryPhoto> photosWithoutThumbnail = photoRepository.findPhotosWithoutThumbnail();
-        
+
         int processed = 0;
         int success = 0;
         int failed = 0;
 
         for (GalleryPhoto photo : photosWithoutThumbnail) {
             processed++;
-            
+
             // Estrai il filename dal src
             String src = photo.getSrc();
             if (src == null || !src.contains("/")) {
                 failed++;
                 continue;
             }
-            
+
             String filename = src.substring(src.lastIndexOf("/") + 1);
-            
+
             // Genera la thumbnail
             boolean generated = fileStorageService.generateThumbnailForExistingFile(filename);
-            
+
             if (generated) {
                 // Aggiorna il campo thumbnailSrc nel database
                 String thumbnailUrl = fileStorageService.getThumbnailUrl(filename);
@@ -270,7 +245,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
         result.put("processed", processed);
         result.put("success", success);
         result.put("failed", failed);
-        
+
         return result;
     }
 
@@ -294,8 +269,7 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     }
 
     private GalleryPhoto findPhotoOrThrow(Long id) {
-        return photoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Foto", "id", id));
+        return photoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Foto", "id", id));
     }
 
     private User getCurrentUser() {

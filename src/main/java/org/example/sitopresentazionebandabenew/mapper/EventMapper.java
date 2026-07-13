@@ -1,5 +1,8 @@
 package org.example.sitopresentazionebandabenew.mapper;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.EventRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.EventResponse;
 import org.example.sitopresentazionebandabenew.entity.Event;
@@ -7,10 +10,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {

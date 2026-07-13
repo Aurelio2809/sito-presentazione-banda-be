@@ -2,6 +2,8 @@ package org.example.sitopresentazionebandabenew.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
 import org.example.sitopresentazionebandabenew.dto.requests.GalleryPhotoRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.GalleryPhotoResponse;
 import org.example.sitopresentazionebandabenew.service.FileStorageService;
@@ -16,9 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/gallery")
 public class GalleryController {
@@ -27,7 +26,8 @@ public class GalleryController {
     private final FileStorageService fileStorageService;
     private final ObjectMapper objectMapper;
 
-    public GalleryController(GalleryPhotoService galleryPhotoService, FileStorageService fileStorageService, ObjectMapper objectMapper) {
+    public GalleryController(
+            GalleryPhotoService galleryPhotoService, FileStorageService fileStorageService, ObjectMapper objectMapper) {
         this.galleryPhotoService = galleryPhotoService;
         this.fileStorageService = fileStorageService;
         this.objectMapper = objectMapper;
@@ -50,9 +50,9 @@ public class GalleryController {
     @GetMapping("/photos/{filename:.+}")
     public ResponseEntity<Resource> servePhoto(@PathVariable String filename) {
         Resource resource = fileStorageService.loadPhotoAsResource(filename);
-        
+
         String contentType = determineContentType(filename);
-        
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000")
@@ -62,9 +62,9 @@ public class GalleryController {
     @GetMapping("/photos/thumb/{filename:.+}")
     public ResponseEntity<Resource> serveThumbnail(@PathVariable String filename) {
         Resource resource = fileStorageService.loadThumbnailAsResource(filename);
-        
+
         String contentType = determineContentType(filename);
-        
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000")
@@ -74,8 +74,7 @@ public class GalleryController {
     // ==================== ENDPOINT PROTETTI (ADMIN) ====================
 
     @GetMapping
-    public ResponseEntity<Page<GalleryPhotoResponse>> getAllPhotos(
-            @PageableDefault(size = 20) Pageable pageable) {
+    public ResponseEntity<Page<GalleryPhotoResponse>> getAllPhotos(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(galleryPhotoService.getAll(pageable));
     }
 
@@ -91,8 +90,8 @@ public class GalleryController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GalleryPhotoResponse> uploadPhoto(
-            @RequestPart("file") MultipartFile file,
-            @RequestPart("metadata") MultipartFile metadataPart) throws java.io.IOException {
+            @RequestPart("file") MultipartFile file, @RequestPart("metadata") MultipartFile metadataPart)
+            throws java.io.IOException {
         String metadataJson = new String(metadataPart.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
         GalleryPhotoRequest metadata = objectMapper.readValue(metadataJson, GalleryPhotoRequest.class);
         GalleryPhotoResponse response = galleryPhotoService.uploadPhoto(file, metadata);
@@ -101,8 +100,7 @@ public class GalleryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<GalleryPhotoResponse> updatePhoto(
-            @PathVariable Long id,
-            @Valid @RequestBody GalleryPhotoRequest request) {
+            @PathVariable Long id, @Valid @RequestBody GalleryPhotoRequest request) {
         return ResponseEntity.ok(galleryPhotoService.update(id, request));
     }
 
@@ -112,9 +110,7 @@ public class GalleryController {
     }
 
     @PatchMapping("/{id}/order")
-    public ResponseEntity<GalleryPhotoResponse> updateOrder(
-            @PathVariable Long id,
-            @RequestParam Integer order) {
+    public ResponseEntity<GalleryPhotoResponse> updateOrder(@PathVariable Long id, @RequestParam Integer order) {
         return ResponseEntity.ok(galleryPhotoService.updateDisplayOrder(id, order));
     }
 

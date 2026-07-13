@@ -1,13 +1,12 @@
 package org.example.sitopresentazionebandabenew.service;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.responses.ActivityLogResponse;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.ActionType;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.TargetType;
 import org.example.sitopresentazionebandabenew.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 public interface ActivityLogService {
 

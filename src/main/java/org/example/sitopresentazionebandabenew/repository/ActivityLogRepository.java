@@ -1,5 +1,7 @@
 package org.example.sitopresentazionebandabenew.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.ActionType;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.TargetType;
@@ -10,9 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {

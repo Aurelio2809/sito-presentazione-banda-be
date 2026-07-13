@@ -1,12 +1,11 @@
 package org.example.sitopresentazionebandabenew.mapper;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.MessageRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.MessageResponse;
 import org.example.sitopresentazionebandabenew.entity.Message;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface MessageMapper {

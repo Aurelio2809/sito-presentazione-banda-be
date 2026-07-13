@@ -1,16 +1,17 @@
 package org.example.sitopresentazionebandabenew.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "activity_logs", indexes = {
-    @Index(name = "idx_activity_timestamp", columnList = "timestamp"),
-    @Index(name = "idx_activity_target_type", columnList = "targetType"),
-    @Index(name = "idx_activity_user", columnList = "user_id")
-})
+@Table(
+        name = "activity_logs",
+        indexes = {
+            @Index(name = "idx_activity_timestamp", columnList = "timestamp"),
+            @Index(name = "idx_activity_target_type", columnList = "targetType"),
+            @Index(name = "idx_activity_user", columnList = "user_id")
+        })
 @Data
 @Builder
 @NoArgsConstructor

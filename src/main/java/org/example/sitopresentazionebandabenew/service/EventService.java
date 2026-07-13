@@ -1,13 +1,12 @@
 package org.example.sitopresentazionebandabenew.service;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.requests.EventRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.EventResponse;
 import org.example.sitopresentazionebandabenew.entity.Event.EventStatus;
 import org.example.sitopresentazionebandabenew.entity.Event.EventType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 public interface EventService {
 
@@ -28,9 +27,9 @@ public interface EventService {
     List<EventResponse> getUpcomingAnnouncements();
 
     Page<EventResponse> getPastEvents(Pageable pageable);
-    
+
     List<EventResponse> getPastEventsList();
-    
+
     Page<EventResponse> getPublicAll(EventType type, Pageable pageable);
 
     EventResponse update(Long id, EventRequest request);

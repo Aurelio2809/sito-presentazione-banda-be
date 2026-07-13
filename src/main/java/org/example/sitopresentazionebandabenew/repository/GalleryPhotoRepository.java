@@ -1,13 +1,12 @@
 package org.example.sitopresentazionebandabenew.repository;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.entity.GalleryPhoto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long> {
@@ -24,7 +23,8 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
     Page<GalleryPhoto> findAllOrderByCreatedAtDesc(Pageable pageable);
 
     /** Ordine per data della foto (anno, mese, giorno) dalla più recente; senza data in coda. */
-    @Query("SELECT p FROM GalleryPhoto p ORDER BY COALESCE(p.photoYear, -1) DESC, COALESCE(p.photoMonth, -1) DESC, COALESCE(p.photoDay, -1) DESC")
+    @Query(
+            "SELECT p FROM GalleryPhoto p ORDER BY COALESCE(p.photoYear, -1) DESC, COALESCE(p.photoMonth, -1) DESC, COALESCE(p.photoDay, -1) DESC")
     Page<GalleryPhoto> findAllOrderByPhotoDateDesc(Pageable pageable);
 
     /** Ordine per indice (displayOrder), nulli in coda, poi per data creazione. */

@@ -1,6 +1,7 @@
 package org.example.sitopresentazionebandabenew.controller;
 
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.example.sitopresentazionebandabenew.dto.requests.MessageRequest;
 import org.example.sitopresentazionebandabenew.dto.responses.MessageResponse;
 import org.example.sitopresentazionebandabenew.service.MessageService;
@@ -9,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -33,9 +32,8 @@ public class MessageController {
 
     @GetMapping
     public ResponseEntity<Page<MessageResponse>> getAllMessages(
-            @RequestParam(required = false) String filter,
-            @PageableDefault(size = 20) Pageable pageable) {
-        
+            @RequestParam(required = false) String filter, @PageableDefault(size = 20) Pageable pageable) {
+
         if ("unread".equalsIgnoreCase(filter)) {
             return ResponseEntity.ok(messageService.getUnread(pageable));
         } else if ("read".equalsIgnoreCase(filter)) {

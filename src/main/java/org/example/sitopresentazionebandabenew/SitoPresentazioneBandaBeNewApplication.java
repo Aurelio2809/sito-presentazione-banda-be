@@ -9,5 +9,4 @@ public class SitoPresentazioneBandaBeNewApplication {
     public static void main(String[] args) {
         SpringApplication.run(SitoPresentazioneBandaBeNewApplication.class, args);
     }
-
 }

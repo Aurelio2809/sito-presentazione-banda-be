@@ -1,11 +1,10 @@
 package org.example.sitopresentazionebandabenew.mapper;
 
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.responses.UserResponse;
 import org.example.sitopresentazionebandabenew.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

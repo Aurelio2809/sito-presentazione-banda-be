@@ -4,11 +4,47 @@ on:
   push:
     branches:
       - integrazione
+  pull_request:
+    branches:
+      - integrazione
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  quality:
+    name: Format, test and package BE
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Check Java formatting
+        run: ./mvnw --batch-mode spotless:check
+
+      - name: Run backend tests
+        run: ./mvnw --batch-mode test
+
+      - name: Package backend
+        run: ./mvnw --batch-mode -DskipTests package
+
   deploy:
     name: Deploy BE
     runs-on: self-hosted
+    needs: quality
+    if: github.event_name == 'push'
 
     steps:
       - name: Pull latest code and rebuild backend

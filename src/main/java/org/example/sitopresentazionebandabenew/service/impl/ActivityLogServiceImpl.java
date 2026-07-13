@@ -1,5 +1,7 @@
 package org.example.sitopresentazionebandabenew.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import org.example.sitopresentazionebandabenew.dto.responses.ActivityLogResponse;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog;
 import org.example.sitopresentazionebandabenew.entity.ActivityLog.ActionType;
@@ -15,9 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 @Transactional
 public class ActivityLogServiceImpl implements ActivityLogService {
@@ -31,7 +30,8 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     }
 
     @Override
-    public void log(User user, ActionType action, TargetType targetType, Long targetId, String targetName, String details) {
+    public void log(
+            User user, ActionType action, TargetType targetType, Long targetId, String targetName, String details) {
         if (user == null) {
             return; // Skip logging se l'utente non è disponibile (es. contesto auth perso in richieste multipart)
         }
@@ -60,14 +60,14 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     @Override
     @Transactional(readOnly = true)
     public Page<ActivityLogResponse> getAll(Pageable pageable) {
-        return activityLogRepository.findByOrderByTimestampDesc(pageable)
-                .map(activityLogMapper::toResponse);
+        return activityLogRepository.findByOrderByTimestampDesc(pageable).map(activityLogMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ActivityLogResponse> getByTargetType(TargetType targetType, Pageable pageable) {
-        return activityLogRepository.findByTargetTypeOrderByTimestampDesc(targetType, pageable)
+        return activityLogRepository
+                .findByTargetTypeOrderByTimestampDesc(targetType, pageable)
                 .map(activityLogMapper::toResponse);
     }
 
