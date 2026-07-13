@@ -21,8 +21,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Page<Event> findByTypeAndStatus(EventType type, EventStatus status, Pageable pageable);
 
-    boolean existsByTypeAndEventDateAndTitle(EventType type, LocalDate eventDate, String title);
-
     @Query(
             "SELECT e FROM Event e WHERE e.type = :type AND e.status = 'PUBLISHED' AND e.eventDate >= :date ORDER BY e.eventDate ASC")
     List<Event> findUpcomingPublished(@Param("type") EventType type, @Param("date") LocalDate date);
