@@ -69,7 +69,7 @@ public class ActivityLog {
         PHOTO,
         EVENT,
         ANNOUNCEMENT,
-        MESSAGE,
+        MESSAGE, // Solo compatibilità per eliminare i log storici al primo avvio.
         USER,
         SETTINGS
     }

@@ -57,6 +57,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(ContactMailException.class)
+    public ResponseEntity<ApiErrorResponse> handleContactMail(ContactMailException ex) {
+        log.warn("Servizio email non disponibile: {}", ex.getCause().getClass().getSimpleName());
+        ApiErrorResponse error =
+                new ApiErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
+
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<ApiErrorResponse> handleMissingPart(MissingServletRequestPartException ex) {
         ApiErrorResponse error = new ApiErrorResponse(

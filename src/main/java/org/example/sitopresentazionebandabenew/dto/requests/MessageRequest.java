@@ -26,5 +26,6 @@ public class MessageRequest {
     private String subject;
 
     @NotBlank(message = "Messaggio obbligatorio")
+    @Size(max = 5000, message = "Messaggio massimo 5000 caratteri")
     private String content;
 }
