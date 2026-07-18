@@ -20,8 +20,8 @@ GitHub Actions esegue il quality gate su pull request e push verso `integrazione
 
 Le richieste inviate dal form pubblico non vengono salvate nel database: il backend le inoltra
 via SMTP alla casella dell'associazione. La gestione Messaggi e i relativi endpoint sono stati
-rimossi. L'eventuale archivio storico preesistente deve essere eliminato con un'operazione
-amministrativa separata e autorizzata.
+rimossi. All'avvio, una bonifica idempotente elimina definitivamente la precedente tabella
+`messages` e i log di attività collegati.
 
 Variabili d'ambiente obbligatorie in produzione:
 
