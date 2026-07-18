@@ -36,6 +36,4 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
 
     @Query("SELECT p FROM GalleryPhoto p WHERE p.thumbnailSrc IS NULL")
     List<GalleryPhoto> findPhotosWithoutThumbnail();
-
-    List<GalleryPhoto> findByPhotoYearIsNull();
 }

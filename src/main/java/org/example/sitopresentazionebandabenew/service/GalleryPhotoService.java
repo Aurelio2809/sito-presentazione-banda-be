@@ -33,12 +33,6 @@ public interface GalleryPhotoService {
     void delete(Long id);
 
     /**
-     * Imposta anno/mese/giorno (da createdAt) su tutte le foto che non hanno ancora data.
-     * Utile per dare una data alle foto già caricate.
-     */
-    int setDatesFromCreatedAtForPhotosWithoutDate();
-
-    /**
      * Genera le thumbnail per tutte le foto che non le hanno.
      * @return mappa con risultati: "processed", "success", "failed"
      */

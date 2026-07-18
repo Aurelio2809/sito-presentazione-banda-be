@@ -193,21 +193,6 @@ public class GalleryPhotoServiceImpl implements GalleryPhotoService {
     }
 
     @Override
-    @Transactional
-    public int setDatesFromCreatedAtForPhotosWithoutDate() {
-        List<GalleryPhoto> withoutDate = photoRepository.findByPhotoYearIsNull();
-        for (GalleryPhoto photo : withoutDate) {
-            if (photo.getCreatedAt() != null) {
-                photo.setPhotoYear(photo.getCreatedAt().getYear());
-                photo.setPhotoMonth(photo.getCreatedAt().getMonthValue());
-                photo.setPhotoDay(photo.getCreatedAt().getDayOfMonth());
-                photoRepository.save(photo);
-            }
-        }
-        return withoutDate.size();
-    }
-
-    @Override
     public Map<String, Integer> generateMissingThumbnails() {
         List<GalleryPhoto> photosWithoutThumbnail = photoRepository.findPhotosWithoutThumbnail();
 
