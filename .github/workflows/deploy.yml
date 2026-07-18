@@ -57,6 +57,13 @@ jobs:
             echo "::error::I secret GitHub VPS_MAIL_USERNAME e VPS_MAIL_PASSWORD devono essere configurati"
             exit 1
           fi
+          MAIL_USERNAME="${MAIL_USERNAME//[[:space:]]/}"
+          MAIL_PASSWORD="${MAIL_PASSWORD//[[:space:]]/}"
+          export MAIL_USERNAME MAIL_PASSWORD
+          if [ "${#MAIL_PASSWORD}" -ne 16 ]; then
+            echo "::error::VPS_MAIL_PASSWORD deve contenere i 16 caratteri della password per applicazioni Google"
+            exit 1
+          fi
           cd /opt/stacks/sito-banda/sito-presentazione-banda-be-new
           git pull origin integrazione
           cd /opt/stacks/sito-banda
