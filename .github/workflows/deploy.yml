@@ -15,57 +15,39 @@ concurrency:
   group: backend-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   quality:
     name: Format, test and package BE
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
           java-version: 21
           cache: maven
 
-      - name: Check Java formatting
-        run: ./mvnw --batch-mode spotless:check
-
-      - name: Run backend tests
-        run: ./mvnw --batch-mode test
-
-      - name: Package backend
-        run: ./mvnw --batch-mode -DskipTests package
+      - name: Format, test and package
+        run: ./mvnw --batch-mode --no-transfer-progress spotless:check verify
 
   deploy:
     name: Deploy BE
     runs-on: self-hosted
     needs: quality
     if: github.event_name == 'push'
+    timeout-minutes: 15
 
     steps:
-      - name: Pull latest code and rebuild backend
-        env:
-          MAIL_USERNAME: ${{ secrets.VPS_MAIL_USERNAME }}
-          MAIL_PASSWORD: ${{ secrets.VPS_MAIL_PASSWORD }}
-          CONTACT_MAIL_TO: bandamusicalecasalidelmanco@gmail.com
-        run: |
-          if [ -z "$MAIL_USERNAME" ] || [ -z "$MAIL_PASSWORD" ]; then
-            echo "::error::I secret GitHub VPS_MAIL_USERNAME e VPS_MAIL_PASSWORD devono essere configurati"
-            exit 1
-          fi
-          MAIL_USERNAME="${MAIL_USERNAME//[[:space:]]/}"
-          MAIL_PASSWORD="${MAIL_PASSWORD//[[:space:]]/}"
-          export MAIL_USERNAME MAIL_PASSWORD
-          if [ "${#MAIL_PASSWORD}" -ne 16 ]; then
-            echo "::error::VPS_MAIL_PASSWORD deve contenere i 16 caratteri della password per applicazioni Google"
-            exit 1
-          fi
-          cd /opt/stacks/sito-banda/sito-presentazione-banda-be-new
-          git pull origin integrazione
-          cd /opt/stacks/sito-banda
-          docker compose up --build -d backend
-          echo "✅ BE Deploy completato"
+      - name: Deploy through restricted host command
+        run: sudo -n /usr/local/sbin/deploy-sito-banda-backend
