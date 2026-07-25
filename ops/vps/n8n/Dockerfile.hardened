@@ -1,0 +1,15 @@
+FROM docker.n8n.io/n8nio/n8n:2.31.6
+
+USER root
+RUN set -eux; \
+    target=/usr/local/lib/node_modules/n8n/node_modules/.pnpm/tar@7.5.17/node_modules/tar; \
+    work="$(mktemp -d)"; \
+    cd "$work"; \
+    npm pack tar@7.5.19; \
+    tar -xzf tar-7.5.19.tgz; \
+    find "$target" -mindepth 1 -maxdepth 1 -exec rm -rf {} +; \
+    cp -a package/. "$target/"; \
+    npm cache clean --force; \
+    cd /; \
+    rm -rf "$work"
+USER node

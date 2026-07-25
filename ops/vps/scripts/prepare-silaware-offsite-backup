@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+readonly STAGING=/var/tmp/silaware-offsite
+readonly BACKUP_ROOT=/var/backups/silaware
+
+exec 9>/run/lock/silaware-offsite-backup.lock
+flock -n 9 || {
+  echo "Preparazione backup off-site già in corso" >&2
+  exit 1
+}
+
+/usr/local/sbin/backup-silaware
+
+latest="$(find "$BACKUP_ROOT" -maxdepth 1 -type f -name 'silaware-*.tar.gz.enc' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)"
+test -n "$latest"
+test -s "$latest"
+
+rm -rf "$STAGING"
+install -d -m 700 -o github-runner -g github-runner "$STAGING"
+install -m 600 -o github-runner -g github-runner "$latest" "$STAGING/$(basename "$latest")"
+age -R /home/ubuntu/.ssh/authorized_keys \
+  -o "$STAGING/silaware-backup-key.age" \
+  /etc/silaware-backup.key
+(
+  cd "$STAGING"
+  sha256sum "$(basename "$latest")" silaware-backup-key.age > SHA256SUMS
+)
+chown github-runner:github-runner "$STAGING/silaware-backup-key.age" "$STAGING/SHA256SUMS"
+chmod 600 "$STAGING/silaware-backup-key.age" "$STAGING/SHA256SUMS"

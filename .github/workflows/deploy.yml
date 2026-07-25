@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - integrazione
+    paths-ignore:
+      - "ops/**"
+      - "**/*.md"
   pull_request:
     branches:
       - integrazione
+    paths-ignore:
+      - "ops/**"
+      - "**/*.md"
 
 permissions:
   contents: read

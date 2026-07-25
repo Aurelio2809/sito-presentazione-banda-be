@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+trap 'echo "Backup fallito alla riga ${LINENO}" >&2' ERR
+
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export DOCKER_CONFIG=/run/silaware-backup-docker
+readonly BACKUP_ROOT=/var/backups/silaware
+readonly KEY_FILE=/etc/silaware-backup.key
+readonly STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+readonly FINAL="${BACKUP_ROOT}/silaware-${STAMP}.tar.gz.enc"
+
+install -d -m 700 -o root -g root "$BACKUP_ROOT" "$DOCKER_CONFIG"
+if [ ! -s "$KEY_FILE" ]; then
+  openssl rand -hex 32 > "$KEY_FILE"
+  chmod 600 "$KEY_FILE"
+fi
+
+exec 9>/run/lock/silaware-backup.lock
+flock -n 9 || {
+  echo "Backup già in corso" >&2
+  exit 1
+}
+
+work="$(mktemp -d /var/tmp/silaware-backup.XXXXXX)"
+paused=()
+cleanup() {
+  for container in "${paused[@]:-}"; do
+    docker unpause "$container" >/dev/null 2>&1 || true
+  done
+  rm -rf "$work"
+}
+trap cleanup EXIT
+
+mkdir -p "$work/databases" "$work/volumes" "$work/config"
+
+docker exec postgres pg_dumpall -U admin | gzip -9 > "$work/databases/postgres-all.sql.gz"
+docker exec nero_db_container pg_dump -U nero_user -d nero_db -Fc > "$work/databases/nero-db.dump"
+
+mongo_user="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' mongodb | awk -F= '$1=="MONGO_INITDB_ROOT_USERNAME"{sub(/^[^=]*=/,""); print; exit}')"
+mongo_password="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' mongodb | awk -F= '$1=="MONGO_INITDB_ROOT_PASSWORD"{sub(/^[^=]*=/,""); print; exit}')"
+docker exec mongodb mongodump \
+  --quiet \
+  --username "$mongo_user" \
+  --password "$mongo_password" \
+  --authenticationDatabase admin \
+  --archive --gzip > "$work/databases/mongodb.archive.gz"
+unset mongo_password
+
+for container in n8n portainer kafka; do
+  if docker inspect "$container" >/dev/null 2>&1; then
+    docker pause "$container" >/dev/null
+    paused+=("$container")
+  fi
+done
+
+for container in n8n portainer caddy tomcat kafka; do
+  while IFS= read -r source; do
+    [ -n "$source" ] || continue
+    name="$(basename "$(dirname "$source")")"
+    tar -C "$source" -czf "$work/volumes/${container}-${name}.tar.gz" .
+  done < <(
+    docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Source}}{{end}}{{end}}' "$container"
+  )
+done
+
+for container in "${paused[@]:-}"; do
+  docker unpause "$container" >/dev/null
+done
+paused=()
+
+tar -C /opt/stacks/sito-banda -czf "$work/volumes/sito-banda-media.tar.gz" foto uploads
+tar -C / -czf "$work/config/server-config.tar.gz" \
+  --exclude='opt/stacks/sito-banda/foto' \
+  --exclude='opt/stacks/sito-banda/uploads' \
+  --exclude='*/.git' \
+  --exclude='*/target' \
+  --exclude='*/node_modules' \
+  opt/stacks \
+  etc/sito-banda \
+  etc/ssh/sshd_config \
+  etc/ssh/sshd_config.d \
+  etc/docker/daemon.json \
+  etc/systemd/system/actions.runner.Aurelio2809-sito-presentazione-banda-be.vps-runner-be.service.d \
+  etc/systemd/system/actions.runner.Aurelio2809-sito-presentazione-banda-fe.vps-runner-fe.service.d \
+  etc/systemd/system/silaware-backup.service \
+  etc/systemd/system/silaware-backup.timer \
+  etc/systemd/system/silaware-security-scan.service \
+  etc/systemd/system/silaware-security-scan.timer \
+  etc/audit/rules.d \
+  etc/sudoers.d/github-runner-deploy \
+  etc/sudoers.d/github-runner-offsite-backup \
+  usr/local/sbin/backup-silaware \
+  usr/local/sbin/prepare-silaware-offsite-backup \
+  usr/local/sbin/cleanup-silaware-offsite-backup \
+  usr/local/sbin/scan-silaware-containers \
+  usr/local/sbin/deploy-sito-banda-backend \
+  usr/local/sbin/deploy-sito-banda-frontend
+
+tar -C "$work" -czf - . |
+  openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+    -pass "file:${KEY_FILE}" -out "$FINAL"
+
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -pass "file:${KEY_FILE}" -in "$FINAL" |
+  tar -tzf - >/dev/null
+
+find "$BACKUP_ROOT" -type f -name 'silaware-*.tar.gz.enc' -mtime +14 -delete
+chmod 600 "$FINAL"
+echo "Backup cifrato verificato: $FINAL"

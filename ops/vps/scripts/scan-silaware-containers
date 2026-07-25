@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+readonly REPORT_ROOT=/var/log/silaware-security
+readonly CACHE_ROOT=/var/lib/trivy-cache
+readonly STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+readonly REPORT="${REPORT_ROOT}/trivy-${STAMP}.tsv"
+
+install -d -m 700 -o root -g root "$REPORT_ROOT" "$CACHE_ROOT"
+printf 'image\tcritical\thigh\tcritical_fixable\thigh_fixable\n' > "$REPORT"
+
+while IFS= read -r image; do
+  result="$(
+    docker run --rm \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v "${CACHE_ROOT}:/root/.cache/" \
+      aquasec/trivy:latest image \
+      --quiet \
+      --scanners vuln \
+      --format json \
+      "$image"
+  )"
+  counts="$(
+    jq -r '
+      [.Results[]?.Vulnerabilities[]?] as $v
+      | [
+          ([$v[] | select(.Severity == "CRITICAL")] | length),
+          ([$v[] | select(.Severity == "HIGH")] | length),
+          ([$v[] | select(.Severity == "CRITICAL" and (.FixedVersion // "") != "")] | length),
+          ([$v[] | select(.Severity == "HIGH" and (.FixedVersion // "") != "")] | length)
+        ]
+      | @tsv
+    ' <<<"$result"
+  )"
+  printf '%s\t%s\n' "$image" "$counts" >> "$REPORT"
+done < <(docker ps --format '{{.Image}}' | sort -u)
+
+ln -sfn "$(basename "$REPORT")" "$REPORT_ROOT/latest.tsv"
+find "$REPORT_ROOT" -type f -name 'trivy-*.tsv' -mtime +90 -delete
+critical_fixable="$(awk -F'\t' 'NR > 1 { total += $4 } END { print total + 0 }' "$REPORT")"
+logger -t silaware-security-scan "Scansione completata: ${critical_fixable} vulnerabilità critiche correggibili. Report: ${REPORT}"
+cat "$REPORT"

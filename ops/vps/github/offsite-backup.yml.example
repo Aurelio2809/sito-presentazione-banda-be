@@ -1,0 +1,36 @@
+name: Encrypted off-site backup
+
+on:
+  schedule:
+    - cron: "30 2 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: silaware-offsite-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Create and upload encrypted backup
+    runs-on: self-hosted
+    timeout-minutes: 45
+
+    steps:
+      - name: Create encrypted backup
+        run: sudo -n /usr/local/sbin/prepare-silaware-offsite-backup
+
+      - name: Upload encrypted archive
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: silaware-encrypted-backup-${{ github.run_id }}
+          path: /var/tmp/silaware-offsite/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Remove temporary copy
+        if: always()
+        run: sudo -n /usr/local/sbin/cleanup-silaware-offsite-backup
